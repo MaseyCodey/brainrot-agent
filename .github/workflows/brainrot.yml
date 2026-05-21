@@ -2,8 +2,8 @@ name: Brainrot Cloud Agent
 
 on:
   schedule:
-    - cron: "0 16 * * *"
-    - cron: "0 23 * * *"
+    - cron: "0 16 * * *" # 9 AM MST
+    - cron: "0 19 * * *" # 12 PM MST
   workflow_dispatch:
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
         run: |
           pip install google-api-python-client google-auth google-auth-httplib2 pillow
 
-      - name: Create and run upgraded brainrot agent
+      - name: Create and run Shorts agent
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
@@ -36,8 +36,9 @@ jobs:
           import random
           import subprocess
           import textwrap
+          import math
           from pathlib import Path
-          from PIL import Image, ImageDraw, ImageFilter
+          from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
           from google.oauth2.credentials import Credentials
           from google.auth.transport.requests import Request
@@ -49,271 +50,249 @@ jobs:
 
           creatures = [
               "Glimbo the Outlet Rat",
-              "The Tax Goblin",
               "Bluetooth Barry",
               "Fridgewalker Supreme",
               "The WiFi Gremlin",
               "Sir Waffleton",
               "The Microwave Monk",
-              "Captain Skib Noodle",
-              "The Dust Bunny Emperor",
-              "The Ranch Phantom",
               "Professor Nugget",
               "The Thermostat Goblin",
               "The Costco Phantom",
               "The Gas Station Oracle",
               "The Laundry Goblin",
-              "The Gas Station Sandwich Prophet",
-              "Bluetooth Toilet Wizard",
               "The Left Sock Entity",
               "The Microwave Burrito King",
-              "Uncle Buffering"
+              "Uncle Buffering",
+              "Captain Cartwheel",
+              "The Receipt Wizard",
+              "Snack Goblin Supreme",
+              "The Parking Lot Oracle",
+              "The Waffle Gremlin",
+              "The Vending Machine Prophet"
           ]
 
-          locations = [
-              "behind a gas station",
-              "inside a broken vending machine",
-              "under the couch",
-              "in aisle seven at Walmart",
-              "inside a forgotten freezer",
-              "behind the thermostat",
-              "inside the drive-thru speaker",
-              "under a pile of laundry",
-              "inside a suspicious air vent",
-              "inside the Costco food court",
-              "under the passenger seat",
-              "behind the dryer",
-              "inside a gas station hot dog roller",
-              "next to a printer that actually works"
+          situations = [
+              "tries to get a free refill at a gas station",
+              "accidentally becomes manager of a vending machine",
+              "gets trapped inside a group chat",
+              "orders one fry and starts a financial crisis",
+              "tries to fix the WiFi by yelling at it",
+              "joins a gym just to use the massage chair",
+              "declares war on a printer",
+              "gets hired by a Roomba",
+              "tries to return a half-eaten burrito",
+              "starts a tiny business selling suspicious coupons",
+              "opens a lemonade stand inside a car wash",
+              "becomes the mayor of aisle seven",
+              "tries to speedrun a Costco sample line",
+              "takes a job guarding lost phone chargers"
           ]
 
-          triggers = [
-              "your phone hits one percent",
-              "someone says just one more episode",
-              "the WiFi disconnects",
-              "a nugget falls on the floor",
-              "the thermostat clicks",
-              "someone microwaves fish",
-              "you hear a random Bluetooth pairing sound",
-              "a shopping cart wheel squeaks",
-              "the lights flicker twice",
-              "someone opens a bag of chips too loud",
-              "a printer jams for no reason",
-              "someone says it should be easy",
-              "the group chat goes silent",
-              "someone asks for a quick favor"
+          twists = [
+              "but every time he lies, his shoes squeak louder",
+              "but his only skill is making awkward silence worse",
+              "but he can only communicate through Bluetooth pairing noises",
+              "but he accidentally becomes emotionally attached to a traffic cone",
+              "but the printer respects him too much",
+              "but the shopping carts follow him like loyal ducks",
+              "but he keeps paying with expired coupons from 2009",
+              "but his confidence is somehow louder than the fire alarm",
+              "but every plan ends with him inside a laundry basket",
+              "but he thinks QR codes are ancient treasure maps"
           ]
 
-          powers = [
-              "became financially literate",
-              "unlocked forbidden snack knowledge",
-              "started speaking in coupon codes",
-              "learned how to dodge responsibilities",
-              "became immune to awkward silence",
-              "turned every room into a side quest",
-              "summoned unpaid parking tickets",
-              "gained max-level yap power",
-              "downloaded a cursed firmware update",
-              "started vibrating at Costco frequency",
-              "became the final boss of minor inconvenience",
-              "absorbed the power of every lost charger"
+          lessons = [
+              "Never trust a man who calls ketchup a smoothie.",
+              "Always check the vent before you blame the WiFi.",
+              "If the printer starts whispering, clock out.",
+              "A coupon is not a personality, but he made it work.",
+              "Some legends are born. Others are found behind the dryer.",
+              "That is why the break room has rules now.",
+              "That is why nobody touches the thermostat anymore.",
+              "The manager said no refunds, and history changed forever.",
+              "Nobody knows where he came from, but he left with the aux cord.",
+              "The snack aisle has not been the same since."
           ]
 
-          weaknesses = [
-              "lukewarm ranch",
-              "a fully charged Android",
-              "eye contact with a manager",
-              "a clean microwave",
-              "unsalted fries",
-              "a receipt longer than three feet",
-              "the sound of a printer working correctly",
-              "a perfectly folded fitted sheet",
-              "room temperature Capri Sun",
-              "someone saying let's circle back",
-              "a working ice cream machine",
-              "a freshly updated router",
-              "a cart with four working wheels"
+          colors = [
+              ((12, 20, 50), (40, 120, 255), (255, 220, 80)),
+              ((20, 10, 35), (190, 70, 255), (80, 255, 180)),
+              ((8, 35, 30), (60, 220, 160), (255, 120, 90)),
+              ((35, 20, 8), (255, 170, 60), (90, 180, 255)),
+              ((18, 18, 28), (255, 80, 140), (120, 255, 240))
           ]
 
-          punchlines = [
-              "And that is why nobody parks near the cart return anymore.",
-              "Scientists still refuse to explain the smell.",
-              "The government denied knowing him, but his LinkedIn says otherwise.",
-              "He was last seen arguing with a Roomba.",
-              "Local witnesses say he had zero aura but unlimited confidence.",
-              "If you see him, do not offer him a payment plan.",
-              "He cannot be stopped, only mildly inconvenienced.",
-              "The HOA tried to fine him and immediately vanished.",
-              "His credit score is classified.",
-              "Nobody survived the group chat after that.",
-              "The vending machine now calls him father.",
-              "Every thermostat in the building changed itself to 89.",
-              "The printer started working out of fear."
-          ]
+          def pick_font(size):
+              possible = [
+                  "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                  "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf"
+              ]
+              for p in possible:
+                  if Path(p).exists():
+                      return ImageFont.truetype(p, size)
+              return ImageFont.load_default()
+
+          def wrap_text(text, width):
+              return "\n".join(textwrap.wrap(text, width=width))
 
           def make_script():
               creature = random.choice(creatures)
-              location = random.choice(locations)
-              trigger = random.choice(triggers)
-              power = random.choice(powers)
-              weakness = random.choice(weaknesses)
-              punchline = random.choice(punchlines)
+              situation = random.choice(situations)
+              twist = random.choice(twists)
+              lesson = random.choice(lessons)
 
-              lines = [
-                  f"This is {creature}.",
-                  f"It appears {location} when {trigger}.",
-                  f"People thought it was harmless until it {power}.",
-                  f"Its only known weakness is {weakness}.",
-                  "If you see it, do not run.",
-                  "Running activates its premium subscription mode.",
-                  punchline
-              ]
+              hook = f"This is {creature}."
+              line1 = f"Today he {situation}."
+              line2 = f"It sounds normal, {twist}."
+              line3 = "Experts tried to understand him and immediately gave up."
+              line4 = lesson
+
+              lines = [hook, line1, line2, line3, line4]
 
               script = " ".join(lines)
-              title = f"{creature} is not real... probably #Shorts"
+
+              title = f"{creature} ruined the timeline #Shorts"
               description = (
-                  "AI-generated fictional comedy short. "
-                  "Original absurd brainrot character lore. "
-                  "#Shorts #brainrot #ai #comedy"
+                  "Original AI-assisted fictional comedy Short. "
+                  "Goofy surreal character lore, not real events. "
+                  "#Shorts #brainrot #comedy #ai"
               )
-              tags = ["Shorts", "brainrot", "AI comedy", "fictional", "weird lore"]
+              tags = ["Shorts", "brainrot", "comedy", "AI comedy", "fictional", "weird lore"]
 
               return title, description, tags, script, lines, creature
 
-          def make_background(creature):
-              bg_path = OUT / "background.png"
-
-              img = Image.new("RGB", (1080, 1920), (8, 8, 14))
-              draw = ImageDraw.Draw(img)
-
-              for i in range(0, 1920, 8):
-                  r = int(15 + i / 1920 * 30)
-                  g = int(10 + i / 1920 * 20)
-                  b = int(35 + i / 1920 * 80)
-                  draw.rectangle([0, i, 1080, i + 8], fill=(r, g, b))
-
-              for _ in range(90):
-                  x = random.randint(-200, 1080)
-                  y = random.randint(-200, 1920)
-                  size = random.randint(60, 260)
-                  color = random.choice([
-                      (40, 80, 180),
-                      (90, 40, 160),
-                      (30, 130, 120),
-                      (150, 60, 80)
-                  ])
-                  draw.ellipse([x, y, x + size, y + size], fill=color)
-
-              img = img.filter(ImageFilter.GaussianBlur(radius=28))
-              draw = ImageDraw.Draw(img)
-
-              title = creature.upper()
-              wrapped = textwrap.wrap(title, width=16)
-
-              y = 190
-              for line in wrapped:
-                  draw.text((540, y), line, fill=(255, 255, 255), anchor="mm")
-                  y += 70
-
-              draw.rectangle([80, 1500, 1000, 1800], outline=(255, 255, 255), width=6)
-              draw.text((540, 1650), "AI FICTIONAL LORE FILE", fill=(255, 255, 255), anchor="mm")
-
-              img.save(bg_path)
-              return bg_path
-
           def make_voice(script):
               voice_path = OUT / "voice.wav"
-
               cmd = [
                   "espeak-ng",
-                  "-v", "en-us+m3",
-                  "-s", "172",
-                  "-p", "55",
+                  "-v", "en-us+m4",
+                  "-s", "178",
+                  "-p", "62",
                   "-w", str(voice_path),
                   script
               ]
-
               subprocess.run(cmd, check=True)
               return voice_path
 
-          def get_audio_duration(audio_path):
+          def audio_duration(path):
               cmd = [
                   "ffprobe",
                   "-v", "error",
                   "-show_entries", "format=duration",
                   "-of", "default=noprint_wrappers=1:nokey=1",
-                  str(audio_path)
+                  str(path)
               ]
-
               result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-              duration = float(result.stdout.strip())
-              return max(duration + 1.5, 25)
+              return float(result.stdout.strip())
 
-          def escape_ass_text(text):
-              return text.replace("{", "").replace("}", "").replace("\n", " ")
+          def make_scene_image(scene_num, total_scenes, creature, line, palette):
+              bg, accent, accent2 = palette
+              img = Image.new("RGB", (1080, 1920), bg)
+              draw = ImageDraw.Draw(img)
 
-          def make_subtitles(lines, duration):
-              ass_path = OUT / "captions.ass"
+              # gradient background
+              for y in range(1920):
+                  blend = y / 1920
+                  r = int(bg[0] * (1 - blend) + accent[0] * blend * 0.45)
+                  g = int(bg[1] * (1 - blend) + accent[1] * blend * 0.45)
+                  b = int(bg[2] * (1 - blend) + accent[2] * blend * 0.45)
+                  draw.line([(0, y), (1080, y)], fill=(r, g, b))
 
-              per_line = duration / len(lines)
+              # soft blob shapes
+              for i in range(18):
+                  x = random.randint(-180, 1080)
+                  y = random.randint(-180, 1920)
+                  s = random.randint(80, 330)
+                  c = accent if i % 2 == 0 else accent2
+                  draw.ellipse([x, y, x+s, y+s], fill=c)
 
-              header = """[Script Info]
-          ScriptType: v4.00+
-          PlayResX: 1080
-          PlayResY: 1920
+              img = img.filter(ImageFilter.GaussianBlur(18))
+              draw = ImageDraw.Draw(img)
 
-          [V4+ Styles]
-          Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-          Style: Default,Arial,76,&H00FFFFFF,&H000000FF,&H00000000,&H99000000,1,0,0,0,100,100,0,0,1,6,2,2,70,70,250,1
+              # goofy character body
+              cx = 540
+              cy = 710 + int(math.sin(scene_num) * 30)
+              body_color = accent2
+              outline = (255, 255, 255)
 
-          [Events]
-          Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-          """
+              draw.ellipse([cx-190, cy-230, cx+190, cy+230], fill=body_color, outline=outline, width=8)
+              draw.ellipse([cx-95, cy-65, cx-35, cy-5], fill=(255,255,255))
+              draw.ellipse([cx+35, cy-65, cx+95, cy-5], fill=(255,255,255))
+              draw.ellipse([cx-73, cy-45, cx-48, cy-20], fill=(0,0,0))
+              draw.ellipse([cx+57, cy-45, cx+82, cy-20], fill=(0,0,0))
+              draw.arc([cx-80, cy+20, cx+80, cy+120], 0, 180, fill=(0,0,0), width=10)
 
-              def ts(seconds):
-                  h = int(seconds // 3600)
-                  m = int((seconds % 3600) // 60)
-                  s = int(seconds % 60)
-                  cs = int((seconds - int(seconds)) * 100)
-                  return f"{h}:{m:02d}:{s:02d}.{cs:02d}"
+              # little arms
+              draw.line([cx-185, cy+20, cx-330, cy+130], fill=outline, width=14)
+              draw.line([cx+185, cy+20, cx+330, cy+130], fill=outline, width=14)
 
-              events = []
-              for i, line in enumerate(lines):
-                  start = i * per_line
-                  end = min((i + 1) * per_line, duration)
-                  short = "\\N".join(textwrap.wrap(line, width=22))
-                  events.append(
-                      f"Dialogue: 0,{ts(start)},{ts(end)},Default,,0,0,0,,{escape_ass_text(short)}"
-                  )
+              # top label
+              small_font = pick_font(46)
+              big_font = pick_font(72)
+              cap_font = pick_font(68)
 
-              ass_path.write_text(header + "\n".join(events), encoding="utf-8")
-              return ass_path
+              draw.rounded_rectangle([80, 80, 1000, 205], radius=35, fill=(0,0,0), outline=outline, width=4)
+              draw.text((540, 142), "FICTIONAL LORE FILE", font=small_font, fill=(255,255,255), anchor="mm")
+
+              # creature name
+              name = wrap_text(creature.upper(), 18)
+              draw.text((540, 315), name, font=big_font, fill=(255,255,255), anchor="mm", stroke_width=5, stroke_fill=(0,0,0), align="center")
+
+              # caption box
+              wrapped = wrap_text(line, 24)
+              draw.rounded_rectangle([70, 1270, 1010, 1745], radius=45, fill=(0,0,0), outline=outline, width=5)
+              draw.text((540, 1505), wrapped, font=cap_font, fill=(255,255,255), anchor="mm", stroke_width=3, stroke_fill=(0,0,0), align="center")
+
+              # scene counter
+              draw.text((540, 1825), f"PART {scene_num + 1}/{total_scenes}", font=small_font, fill=(255,255,255), anchor="mm")
+
+              path = OUT / f"scene_{scene_num}.png"
+              img.save(path)
+              return path
 
           def make_video(script, lines, creature):
-              bg_path = make_background(creature)
-              voice_path = make_voice(script)
-              duration = get_audio_duration(voice_path)
-              sub_path = make_subtitles(lines, duration)
+              voice = make_voice(script)
+              duration = max(audio_duration(voice) + 0.8, 22)
+              scene_time = duration / len(lines)
+              palette = random.choice(colors)
 
-              video_path = OUT / "brainrot_short.mp4"
+              scene_paths = []
+              for i, line in enumerate(lines):
+                  scene_paths.append(make_scene_image(i, len(lines), creature, line, palette))
 
-              cmd = [
+              list_file = OUT / "scenes.txt"
+              with list_file.open("w", encoding="utf-8") as f:
+                  for path in scene_paths:
+                      f.write(f"file '{path.resolve()}'\n")
+                      f.write(f"duration {scene_time}\n")
+                  f.write(f"file '{scene_paths[-1].resolve()}'\n")
+
+              slideshow = OUT / "slideshow.mp4"
+              cmd1 = [
                   "ffmpeg", "-y",
-                  "-loop", "1",
-                  "-i", str(bg_path),
-                  "-i", str(voice_path),
-                  "-t", str(duration),
-                  "-vf",
-                  f"scale=1080:1920,subtitles={sub_path}:force_style='Fontname=Arial,Fontsize=76,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=6,Shadow=2,Alignment=2,MarginV=250'",
+                  "-f", "concat",
+                  "-safe", "0",
+                  "-i", str(list_file),
+                  "-vf", "scale=1080:1920,format=yuv420p",
+                  "-r", "30",
                   "-c:v", "libx264",
+                  str(slideshow)
+              ]
+              subprocess.run(cmd1, check=True)
+
+              final = OUT / "brainrot_short.mp4"
+              cmd2 = [
+                  "ffmpeg", "-y",
+                  "-i", str(slideshow),
+                  "-i", str(voice),
+                  "-c:v", "copy",
                   "-c:a", "aac",
                   "-shortest",
-                  "-pix_fmt", "yuv420p",
-                  str(video_path)
+                  "-metadata", "title=AI fictional comedy short",
+                  str(final)
               ]
-
-              subprocess.run(cmd, check=True)
-              return video_path
+              subprocess.run(cmd2, check=True)
+              return final
 
           def upload_video(video_path, title, description, tags):
               client_id = os.environ["YT_CLIENT_ID"]
@@ -330,7 +309,6 @@ jobs:
               )
 
               creds.refresh(Request())
-
               youtube = build("youtube", "v3", credentials=creds)
 
               body = {
@@ -341,7 +319,7 @@ jobs:
                       "categoryId": "23"
                   },
                   "status": {
-                      "privacyStatus": "private",
+                      "privacyStatus": "public",
                       "selfDeclaredMadeForKids": False
                   }
               }
@@ -371,8 +349,7 @@ jobs:
           title, description, tags, script, lines, creature = make_script()
 
           print("TITLE:", title)
-          print("SCRIPT:")
-          print(script)
+          print("SCRIPT:", script)
 
           video = make_video(script, lines, creature)
           upload_video(video, title, description, tags)
