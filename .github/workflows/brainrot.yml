@@ -2,8 +2,8 @@ name: Brainrot Cloud Agent
 
 on:
   schedule:
-    - cron: "0 16 * * *" # 9 AM MST
-    - cron: "0 19 * * *" # 12 PM MST
+    - cron: "0 16 * * *" # 9:00 AM Arizona/MST
+    - cron: "0 19 * * *" # 12:00 PM Arizona/MST
   workflow_dispatch:
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
         run: |
           pip install google-api-python-client google-auth google-auth-httplib2 pillow
 
-      - name: Create and run Shorts agent
+      - name: Create and run Shorts series agent
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
@@ -38,6 +38,8 @@ jobs:
           import textwrap
           import math
           from pathlib import Path
+          from datetime import datetime, timedelta, timezone
+
           from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
           from google.oauth2.credentials import Credentials
@@ -68,7 +70,27 @@ jobs:
               "Snack Goblin Supreme",
               "The Parking Lot Oracle",
               "The Waffle Gremlin",
-              "The Vending Machine Prophet"
+              "The Vending Machine Prophet",
+              "The Drive Thru Wizard",
+              "The Gas Station Sandwich King",
+              "The Coupon Goblin",
+              "The Broken Printer Spirit",
+              "The Lost Charger Gremlin",
+              "The Self Checkout Goblin",
+              "The Bluetooth Bathroom Wizard",
+              "The Parking Ticket Troll",
+              "The Nacho Cheese Phantom",
+              "The Roomba Emperor",
+              "The Breakroom Gremlin",
+              "The Ice Machine Oracle",
+              "The Hot Dog Roller King",
+              "The Shopping Cart Goblin",
+              "The Gas Pump Philosopher",
+              "The Three Dollar Burrito Mage",
+              "The Soda Fountain Knight",
+              "The Receipt Goblin",
+              "The Laundry Basket Wizard",
+              "The Expired Coupon Phantom"
           ]
 
           situations = [
@@ -85,7 +107,23 @@ jobs:
               "opens a lemonade stand inside a car wash",
               "becomes the mayor of aisle seven",
               "tries to speedrun a Costco sample line",
-              "takes a job guarding lost phone chargers"
+              "takes a job guarding lost phone chargers",
+              "tries to become famous by reviewing gas station nachos",
+              "accidentally starts a neighborhood scooter gang",
+              "tries to sell bottled tap water as premium cloud juice",
+              "gets stuck arguing with a self-checkout machine",
+              "tries to teach a shopping cart how to drift",
+              "opens a fake restaurant called The Microwave Palace",
+              "tries to win employee of the month at a place he does not work",
+              "becomes emotionally attached to a gas station hot dog",
+              "tries to pay rent with reward points",
+              "starts a podcast inside a bathroom stall",
+              "gets challenged by a printer to a staring contest",
+              "opens a gym for shopping carts",
+              "tries to sell WiFi passwords in the parking lot",
+              "accidentally becomes the mascot for a sandwich shop",
+              "starts giving life advice to traffic cones",
+              "tries to turn a laundromat into a nightclub"
           ]
 
           twists = [
@@ -98,10 +136,20 @@ jobs:
               "but he keeps paying with expired coupons from 2009",
               "but his confidence is somehow louder than the fire alarm",
               "but every plan ends with him inside a laundry basket",
-              "but he thinks QR codes are ancient treasure maps"
+              "but he thinks QR codes are ancient treasure maps",
+              "but every snack he touches becomes mildly expensive",
+              "but the self-checkout machine starts calling him boss",
+              "but the Roomba challenges him to single combat",
+              "but his shadow keeps applying for jobs without him",
+              "but the manager is somehow even weirder",
+              "but he believes every receipt is a treasure map",
+              "but the vending machine starts charging emotional damages",
+              "but the ice machine knows his full legal name",
+              "but the bathroom hand dryer begins narrating his choices",
+              "but every customer suddenly asks him for help"
           ]
 
-          lessons = [
+          endings = [
               "Never trust a man who calls ketchup a smoothie.",
               "Always check the vent before you blame the WiFi.",
               "If the printer starts whispering, clock out.",
@@ -111,16 +159,49 @@ jobs:
               "That is why nobody touches the thermostat anymore.",
               "The manager said no refunds, and history changed forever.",
               "Nobody knows where he came from, but he left with the aux cord.",
-              "The snack aisle has not been the same since."
+              "The snack aisle has not been the same since.",
+              "Never let a goblin near customer service.",
+              "That is why the vending machine has trust issues.",
+              "He did not win, but he did become a local warning sign.",
+              "The cart return still remembers him.",
+              "And that is how he got banned from three Walmarts and a dentist office.",
+              "That is why the mop bucket has a security guard.",
+              "Nobody survived the group chat after that.",
+              "The nacho machine still refuses to speak about it.",
+              "That is why the receipt printer screams now.",
+              "He left with zero dollars and unlimited confidence."
           ]
 
-          colors = [
+          reactions = [
+              "Everyone stopped blinking.",
+              "The manager slowly backed into the break room.",
+              "The printer made eye contact.",
+              "A shopping cart rolled by itself.",
+              "Somebody whispered, not again.",
+              "The security camera turned away.",
+              "Even the Roomba looked concerned.",
+              "The soda machine started glitching.",
+              "A receipt printed with only the word run.",
+              "The whole aisle got quiet."
+          ]
+
+          palettes = [
               ((12, 20, 50), (40, 120, 255), (255, 220, 80)),
               ((20, 10, 35), (190, 70, 255), (80, 255, 180)),
               ((8, 35, 30), (60, 220, 160), (255, 120, 90)),
               ((35, 20, 8), (255, 170, 60), (90, 180, 255)),
-              ((18, 18, 28), (255, 80, 140), (120, 255, 240))
+              ((18, 18, 28), (255, 80, 140), (120, 255, 240)),
+              ((10, 25, 18), (95, 255, 140), (255, 235, 90)),
+              ((28, 12, 22), (255, 95, 190), (95, 210, 255)),
+              ((20, 22, 8), (210, 255, 60), (255, 115, 60)),
+              ((5, 18, 32), (70, 170, 255), (255, 90, 210)),
+              ((30, 8, 8), (255, 85, 85), (255, 220, 120))
           ]
+
+          # Combination count:
+          # creatures x situations x twists x endings x reactions
+          # 40 x 30 x 20 x 20 x 10 = 4,800,000 possible series cores.
+          # Far above 3000.
 
           def pick_font(size):
               possible = [
@@ -135,44 +216,46 @@ jobs:
           def wrap_text(text, width):
               return "\n".join(textwrap.wrap(text, width=width))
 
-          def make_script():
+          def clean_title(text):
+              bad = ["\"", "'", "\n", "\r"]
+              for b in bad:
+                  text = text.replace(b, "")
+              return text[:95]
+
+          def make_series():
               creature = random.choice(creatures)
               situation = random.choice(situations)
               twist = random.choice(twists)
-              lesson = random.choice(lessons)
+              ending = random.choice(endings)
+              reaction = random.choice(reactions)
 
-              hook = f"This is {creature}."
-              line1 = f"Today he {situation}."
-              line2 = f"It sounds normal, {twist}."
-              line3 = "Experts tried to understand him and immediately gave up."
-              line4 = lesson
+              series_title = f"{creature} vs the Worst Day Ever"
 
-              lines = [hook, line1, line2, line3, line4]
-
-              script = " ".join(lines)
-
-              title = f"{creature} ruined the timeline #Shorts"
-              description = (
-                  "Original AI-assisted fictional comedy Short. "
-                  "Goofy surreal character lore, not real events. "
-                  "#Shorts #brainrot #comedy #ai"
-              )
-              tags = ["Shorts", "brainrot", "comedy", "AI comedy", "fictional", "weird lore"]
-
-              return title, description, tags, script, lines, creature
-
-          def make_voice(script):
-              voice_path = OUT / "voice.wav"
-              cmd = [
-                  "espeak-ng",
-                  "-v", "en-us+m4",
-                  "-s", "178",
-                  "-p", "62",
-                  "-w", str(voice_path),
-                  script
+              part1 = [
+                  f"This is {creature}.",
+                  f"Today he {situation}.",
+                  "He thought this would be easy.",
+                  reaction,
+                  "Part 2 gets worse."
               ]
-              subprocess.run(cmd, check=True)
-              return voice_path
+
+              part2 = [
+                  f"{creature} made one tiny mistake.",
+                  f"The problem is, {twist}.",
+                  "Now everyone is staring.",
+                  random.choice(reactions),
+                  "Part 3 is where it fully collapses."
+              ]
+
+              part3 = [
+                  f"{creature} tried to fix everything.",
+                  "That was somehow the worst decision.",
+                  "The whole room entered side quest mode.",
+                  ending,
+                  "Follow for the next cursed episode."
+              ]
+
+              return series_title, creature, [part1, part2, part3]
 
           def audio_duration(path):
               cmd = [
@@ -185,12 +268,33 @@ jobs:
               result = subprocess.run(cmd, capture_output=True, text=True, check=True)
               return float(result.stdout.strip())
 
-          def make_scene_image(scene_num, total_scenes, creature, line, palette):
+          def make_line_voice(text, part_number, line_number):
+              voice_path = OUT / f"voice_part_{part_number}_line_{line_number}.wav"
+
+              voice_choices = [
+                  "en-us+m3",
+                  "en-us+m4",
+                  "en-us+m5",
+                  "en-us+f3"
+              ]
+
+              cmd = [
+                  "espeak-ng",
+                  "-v", random.choice(voice_choices),
+                  "-s", "178",
+                  "-p", "62",
+                  "-w", str(voice_path),
+                  text
+              ]
+
+              subprocess.run(cmd, check=True)
+              return voice_path
+
+          def make_scene_image(scene_num, total_scenes, creature, line, palette, part_number):
               bg, accent, accent2 = palette
               img = Image.new("RGB", (1080, 1920), bg)
               draw = ImageDraw.Draw(img)
 
-              # gradient background
               for y in range(1920):
                   blend = y / 1920
                   r = int(bg[0] * (1 - blend) + accent[0] * blend * 0.45)
@@ -198,103 +302,139 @@ jobs:
                   b = int(bg[2] * (1 - blend) + accent[2] * blend * 0.45)
                   draw.line([(0, y), (1080, y)], fill=(r, g, b))
 
-              # soft blob shapes
-              for i in range(18):
-                  x = random.randint(-180, 1080)
-                  y = random.randint(-180, 1920)
-                  s = random.randint(80, 330)
+              for i in range(24):
+                  x = random.randint(-220, 1080)
+                  y = random.randint(-220, 1920)
+                  s = random.randint(80, 360)
                   c = accent if i % 2 == 0 else accent2
-                  draw.ellipse([x, y, x+s, y+s], fill=c)
+                  draw.ellipse([x, y, x + s, y + s], fill=c)
 
               img = img.filter(ImageFilter.GaussianBlur(18))
               draw = ImageDraw.Draw(img)
 
-              # goofy character body
+              small_font = pick_font(44)
+              medium_font = pick_font(56)
+              big_font = pick_font(74)
+              cap_font = pick_font(68)
+
+              draw.rounded_rectangle([70, 70, 1010, 200], radius=35, fill=(0, 0, 0), outline=(255, 255, 255), width=5)
+              draw.text((540, 135), f"PART {part_number}/3", font=medium_font, fill=(255, 255, 255), anchor="mm")
+
+              name = wrap_text(creature.upper(), 18)
+              draw.text(
+                  (540, 315),
+                  name,
+                  font=big_font,
+                  fill=(255, 255, 255),
+                  anchor="mm",
+                  stroke_width=6,
+                  stroke_fill=(0, 0, 0),
+                  align="center"
+              )
+
               cx = 540
-              cy = 710 + int(math.sin(scene_num) * 30)
+              cy = 710 + int(math.sin(scene_num + part_number) * 25)
               body_color = accent2
               outline = (255, 255, 255)
 
-              draw.ellipse([cx-190, cy-230, cx+190, cy+230], fill=body_color, outline=outline, width=8)
-              draw.ellipse([cx-95, cy-65, cx-35, cy-5], fill=(255,255,255))
-              draw.ellipse([cx+35, cy-65, cx+95, cy-5], fill=(255,255,255))
-              draw.ellipse([cx-73, cy-45, cx-48, cy-20], fill=(0,0,0))
-              draw.ellipse([cx+57, cy-45, cx+82, cy-20], fill=(0,0,0))
-              draw.arc([cx-80, cy+20, cx+80, cy+120], 0, 180, fill=(0,0,0), width=10)
+              draw.ellipse([cx - 190, cy - 230, cx + 190, cy + 230], fill=body_color, outline=outline, width=9)
+              draw.ellipse([cx - 105, cy - 70, cx - 35, cy + 5], fill=(255, 255, 255), outline=(0, 0, 0), width=4)
+              draw.ellipse([cx + 35, cy - 70, cx + 105, cy + 5], fill=(255, 255, 255), outline=(0, 0, 0), width=4)
+              draw.ellipse([cx - 77, cy - 42, cx - 50, cy - 15], fill=(0, 0, 0))
+              draw.ellipse([cx + 58, cy - 42, cx + 85, cy - 15], fill=(0, 0, 0))
 
-              # little arms
-              draw.line([cx-185, cy+20, cx-330, cy+130], fill=outline, width=14)
-              draw.line([cx+185, cy+20, cx+330, cy+130], fill=outline, width=14)
+              if scene_num % 2 == 0:
+                  draw.arc([cx - 80, cy + 25, cx + 80, cy + 120], 0, 180, fill=(0, 0, 0), width=12)
+              else:
+                  draw.ellipse([cx - 55, cy + 50, cx + 55, cy + 120], fill=(0, 0, 0))
 
-              # top label
-              small_font = pick_font(46)
-              big_font = pick_font(72)
-              cap_font = pick_font(68)
+              draw.line([cx - 185, cy + 20, cx - 330, cy + 120], fill=outline, width=15)
+              draw.line([cx + 185, cy + 20, cx + 330, cy + 120], fill=outline, width=15)
 
-              draw.rounded_rectangle([80, 80, 1000, 205], radius=35, fill=(0,0,0), outline=outline, width=4)
-              draw.text((540, 142), "FICTIONAL LORE FILE", font=small_font, fill=(255,255,255), anchor="mm")
+              draw.rounded_rectangle([120, 925, 330, 1045], radius=25, fill=(0, 0, 0), outline=outline, width=5)
+              draw.text((225, 985), "LOL", font=medium_font, fill=(255, 255, 255), anchor="mm")
 
-              # creature name
-              name = wrap_text(creature.upper(), 18)
-              draw.text((540, 315), name, font=big_font, fill=(255,255,255), anchor="mm", stroke_width=5, stroke_fill=(0,0,0), align="center")
+              draw.rounded_rectangle([750, 925, 970, 1045], radius=25, fill=(0, 0, 0), outline=outline, width=5)
+              draw.text((860, 985), "???", font=medium_font, fill=(255, 255, 255), anchor="mm")
 
-              # caption box
               wrapped = wrap_text(line, 24)
-              draw.rounded_rectangle([70, 1270, 1010, 1745], radius=45, fill=(0,0,0), outline=outline, width=5)
-              draw.text((540, 1505), wrapped, font=cap_font, fill=(255,255,255), anchor="mm", stroke_width=3, stroke_fill=(0,0,0), align="center")
+              draw.rounded_rectangle([65, 1265, 1015, 1745], radius=45, fill=(0, 0, 0), outline=outline, width=6)
+              draw.text(
+                  (540, 1505),
+                  wrapped,
+                  font=cap_font,
+                  fill=(255, 255, 255),
+                  anchor="mm",
+                  stroke_width=3,
+                  stroke_fill=(0, 0, 0),
+                  align="center"
+              )
 
-              # scene counter
-              draw.text((540, 1825), f"PART {scene_num + 1}/{total_scenes}", font=small_font, fill=(255,255,255), anchor="mm")
+              draw.text(
+                  (540, 1835),
+                  "AI FICTIONAL COMEDY",
+                  font=small_font,
+                  fill=(255, 255, 255),
+                  anchor="mm",
+                  stroke_width=3,
+                  stroke_fill=(0, 0, 0)
+              )
 
-              path = OUT / f"scene_{scene_num}.png"
+              path = OUT / f"part_{part_number}_scene_{scene_num}.png"
               img.save(path)
               return path
 
-          def make_video(script, lines, creature):
-              voice = make_voice(script)
-              duration = max(audio_duration(voice) + 0.8, 22)
-              scene_time = duration / len(lines)
-              palette = random.choice(colors)
+          def make_scene_video(image_path, voice_path, part_number, scene_num):
+              duration = audio_duration(voice_path) + 0.25
+              scene_video = OUT / f"part_{part_number}_scene_{scene_num}.mp4"
 
-              scene_paths = []
+              cmd = [
+                  "ffmpeg", "-y",
+                  "-loop", "1",
+                  "-i", str(image_path),
+                  "-i", str(voice_path),
+                  "-t", str(duration),
+                  "-vf", "scale=1080:1920,format=yuv420p",
+                  "-c:v", "libx264",
+                  "-c:a", "aac",
+                  "-shortest",
+                  str(scene_video)
+              ]
+
+              subprocess.run(cmd, check=True)
+              return scene_video
+
+          def make_video(lines, creature, part_number):
+              palette = random.choice(palettes)
+              scene_videos = []
+
               for i, line in enumerate(lines):
-                  scene_paths.append(make_scene_image(i, len(lines), creature, line, palette))
+                  image = make_scene_image(i, len(lines), creature, line, palette, part_number)
+                  voice = make_line_voice(line, part_number, i)
+                  scene_video = make_scene_video(image, voice, part_number, i)
+                  scene_videos.append(scene_video)
 
-              list_file = OUT / "scenes.txt"
+              list_file = OUT / f"concat_part_{part_number}.txt"
+
               with list_file.open("w", encoding="utf-8") as f:
-                  for path in scene_paths:
-                      f.write(f"file '{path.resolve()}'\n")
-                      f.write(f"duration {scene_time}\n")
-                  f.write(f"file '{scene_paths[-1].resolve()}'\n")
+                  for video in scene_videos:
+                      f.write(f"file '{video.resolve()}'\n")
 
-              slideshow = OUT / "slideshow.mp4"
-              cmd1 = [
+              final = OUT / f"brainrot_short_part_{part_number}.mp4"
+
+              cmd = [
                   "ffmpeg", "-y",
                   "-f", "concat",
                   "-safe", "0",
                   "-i", str(list_file),
-                  "-vf", "scale=1080:1920,format=yuv420p",
-                  "-r", "30",
-                  "-c:v", "libx264",
-                  str(slideshow)
-              ]
-              subprocess.run(cmd1, check=True)
-
-              final = OUT / "brainrot_short.mp4"
-              cmd2 = [
-                  "ffmpeg", "-y",
-                  "-i", str(slideshow),
-                  "-i", str(voice),
-                  "-c:v", "copy",
-                  "-c:a", "aac",
-                  "-shortest",
-                  "-metadata", "title=AI fictional comedy short",
+                  "-c", "copy",
                   str(final)
               ]
-              subprocess.run(cmd2, check=True)
+
+              subprocess.run(cmd, check=True)
               return final
 
-          def upload_video(video_path, title, description, tags):
+          def get_youtube():
               client_id = os.environ["YT_CLIENT_ID"]
               client_secret = os.environ["YT_CLIENT_SECRET"]
               refresh_token = os.environ["YT_REFRESH_TOKEN"]
@@ -309,19 +449,29 @@ jobs:
               )
 
               creds.refresh(Request())
-              youtube = build("youtube", "v3", credentials=creds)
+              return build("youtube", "v3", credentials=creds)
+
+          def upload_video(youtube, video_path, title, description, tags, publish_at=None):
+              if publish_at:
+                  status_body = {
+                      "privacyStatus": "private",
+                      "publishAt": publish_at,
+                      "selfDeclaredMadeForKids": False
+                  }
+              else:
+                  status_body = {
+                      "privacyStatus": "public",
+                      "selfDeclaredMadeForKids": False
+                  }
 
               body = {
                   "snippet": {
-                      "title": title[:100],
+                      "title": clean_title(title),
                       "description": description,
                       "tags": tags,
                       "categoryId": "23"
                   },
-                  "status": {
-                      "privacyStatus": "public",
-                      "selfDeclaredMadeForKids": False
-                  }
+                  "status": status_body
               }
 
               media = MediaFileUpload(
@@ -346,13 +496,50 @@ jobs:
               print("Upload complete.")
               print("Video ID:", response.get("id"))
 
-          title, description, tags, script, lines, creature = make_script()
+          def main():
+              series_title, creature, parts = make_series()
+              youtube = get_youtube()
+              now = datetime.now(timezone.utc)
 
-          print("TITLE:", title)
-          print("SCRIPT:", script)
+              for index, part_lines in enumerate(parts):
+                  part_number = index + 1
 
-          video = make_video(script, lines, creature)
-          upload_video(video, title, description, tags)
+                  title = f"{series_title} Part {part_number} #Shorts"
+
+                  description = (
+                      f"Part {part_number}/3 of an original AI-assisted fictional comedy mini-series. "
+                      "Goofy surreal character lore, not real events. "
+                      "This video is fictional comedy. "
+                      "#Shorts #brainrot #comedy #ai"
+                  )
+
+                  tags = [
+                      "Shorts",
+                      "brainrot",
+                      "comedy",
+                      "AI comedy",
+                      "fictional",
+                      "mini series",
+                      f"part {part_number}",
+                      "funny shorts"
+                  ]
+
+                  print("TITLE:", title)
+                  print("LINES:")
+                  for line in part_lines:
+                      print(line)
+
+                  video = make_video(part_lines, creature, part_number)
+
+                  if index == 0:
+                      upload_video(youtube, video, title, description, tags)
+                  else:
+                      publish_time = now + timedelta(minutes=30 * index)
+                      publish_at = publish_time.isoformat().replace("+00:00", "Z")
+                      upload_video(youtube, video, title, description, tags, publish_at=publish_at)
+
+          if __name__ == "__main__":
+              main()
           PY
 
           python brainrot_agent.py
