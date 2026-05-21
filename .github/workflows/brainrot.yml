@@ -1,0 +1,279 @@
+name: Brainrot Cloud Agent
+
+on:
+  schedule:
+    - cron: "0 16 * * *"
+    - cron: "0 23 * * *"
+  workflow_dispatch:
+
+jobs:
+  make-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python packages
+        run: |
+          pip install google-api-python-client google-auth google-auth-httplib2
+
+      - name: Create and run brainrot agent
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: |
+          cat > brainrot_agent.py <<'PY'
+          import os
+          import random
+          import subprocess
+          import textwrap
+          from pathlib import Path
+
+          from google.oauth2.credentials import Credentials
+          from google.auth.transport.requests import Request
+          from googleapiclient.discovery import build
+          from googleapiclient.http import MediaFileUpload
+
+          OUT = Path("output")
+          OUT.mkdir(exist_ok=True)
+
+          creatures = [
+              "Glimbo the Outlet Rat",
+              "The Tax Goblin",
+              "Bluetooth Barry",
+              "Fridgewalker Supreme",
+              "The WiFi Gremlin",
+              "Sir Waffleton",
+              "The Microwave Monk",
+              "Captain Skib Noodle",
+              "The Dust Bunny Emperor",
+              "The Ranch Phantom",
+              "Professor Nugget",
+              "The Thermostat Goblin",
+              "The Costco Phantom",
+              "The Gas Station Oracle",
+              "The Laundry Goblin"
+          ]
+
+          locations = [
+              "behind a gas station",
+              "inside a broken vending machine",
+              "under the couch",
+              "in aisle seven at Walmart",
+              "inside a forgotten freezer",
+              "behind the thermostat",
+              "inside the drive-thru speaker",
+              "under a pile of laundry",
+              "inside a suspicious air vent",
+              "inside the Costco food court",
+              "under the passenger seat",
+              "behind the dryer",
+              "inside a gas station hot dog roller",
+              "next to a printer that actually works"
+          ]
+
+          triggers = [
+              "your phone hits one percent",
+              "someone says just one more episode",
+              "the WiFi disconnects",
+              "a nugget falls on the floor",
+              "the thermostat clicks",
+              "someone microwaves fish",
+              "you hear a random Bluetooth pairing sound",
+              "a shopping cart wheel squeaks",
+              "the lights flicker twice",
+              "someone opens a bag of chips too loud",
+              "a printer jams for no reason",
+              "someone says it should be easy",
+              "the group chat goes silent",
+              "someone asks for a quick favor"
+          ]
+
+          powers = [
+              "became financially literate",
+              "unlocked forbidden snack knowledge",
+              "started speaking in coupon codes",
+              "learned how to dodge responsibilities",
+              "became immune to awkward silence",
+              "turned every room into a side quest",
+              "summoned unpaid parking tickets",
+              "gained max-level yap power",
+              "downloaded a cursed firmware update",
+              "started vibrating at Costco frequency",
+              "became the final boss of minor inconvenience",
+              "absorbed the power of every lost charger"
+          ]
+
+          weaknesses = [
+              "lukewarm ranch",
+              "a fully charged Android",
+              "eye contact with a manager",
+              "a clean microwave",
+              "unsalted fries",
+              "a receipt longer than three feet",
+              "the sound of a printer working correctly",
+              "a perfectly folded fitted sheet",
+              "room temperature Capri Sun",
+              "someone saying let's circle back",
+              "a working ice cream machine",
+              "a freshly updated router",
+              "a cart with four working wheels"
+          ]
+
+          punchlines = [
+              "And that is why nobody parks near the cart return anymore.",
+              "Scientists still refuse to explain the smell.",
+              "The government denied knowing him, but his LinkedIn says otherwise.",
+              "He was last seen arguing with a Roomba.",
+              "Local witnesses say he had zero aura but unlimited confidence.",
+              "If you see him, do not offer him a payment plan.",
+              "He cannot be stopped, only mildly inconvenienced.",
+              "The HOA tried to fine him and immediately vanished.",
+              "His credit score is classified.",
+              "Nobody survived the group chat after that.",
+              "The vending machine now calls him father.",
+              "Every thermostat in the building changed itself to 89.",
+              "The printer started working out of fear."
+          ]
+
+          def make_script():
+              creature = random.choice(creatures)
+              location = random.choice(locations)
+              trigger = random.choice(triggers)
+              power = random.choice(powers)
+              weakness = random.choice(weaknesses)
+              punchline = random.choice(punchlines)
+
+              script = f"""This is {creature}.
+          It appears {location} when {trigger}.
+          People thought it was harmless until it {power}.
+          Its only known weakness is {weakness}.
+          If you see it, do not run.
+          Running activates its premium subscription mode.
+          {punchline}
+          """
+
+              title = f"{creature} is not real... probably"
+              description = (
+                  "AI-generated fictional comedy short. "
+                  "Original absurd brainrot character lore. "
+                  "#shorts #brainrot #ai #comedy"
+              )
+              tags = ["shorts", "brainrot", "ai comedy", "fictional", "weird lore"]
+
+              return title, description, tags, script
+
+          def make_captions(script):
+              lines = []
+              for line in script.splitlines():
+                  if line.strip():
+                      lines.extend(textwrap.wrap(line.strip(), width=28))
+
+              caption_path = OUT / "captions.txt"
+              caption_path.write_text("\\n".join(lines), encoding="utf-8")
+              return caption_path
+
+          def make_video(script):
+              caption_path = make_captions(script)
+              video_path = OUT / "brainrot_short.mp4"
+
+              drawtext = (
+                  f"drawtext=textfile='{caption_path}':"
+                  "fontcolor=white:"
+                  "fontsize=72:"
+                  "borderw=5:"
+                  "bordercolor=black:"
+                  "x=(w-text_w)/2:"
+                  "y=(h-text_h)/2"
+              )
+
+              cmd = [
+                  "ffmpeg", "-y",
+                  "-f", "lavfi",
+                  "-i", "testsrc2=size=1080x1920:rate=30",
+                  "-f", "lavfi",
+                  "-i", "sine=frequency=660:duration=35",
+                  "-t", "35",
+                  "-vf", drawtext,
+                  "-c:v", "libx264",
+                  "-c:a", "aac",
+                  "-pix_fmt", "yuv420p",
+                  str(video_path)
+              ]
+
+              subprocess.run(cmd, check=True)
+              return video_path
+
+          def upload_video(video_path, title, description, tags):
+              client_id = os.environ["YT_CLIENT_ID"]
+              client_secret = os.environ["YT_CLIENT_SECRET"]
+              refresh_token = os.environ["YT_REFRESH_TOKEN"]
+
+              creds = Credentials(
+                  token=None,
+                  refresh_token=refresh_token,
+                  token_uri="https://oauth2.googleapis.com/token",
+                  client_id=client_id,
+                  client_secret=client_secret,
+                  scopes=["https://www.googleapis.com/auth/youtube.upload"]
+              )
+
+              creds.refresh(Request())
+
+              youtube = build("youtube", "v3", credentials=creds)
+
+              body = {
+                  "snippet": {
+                      "title": title[:100],
+                      "description": description,
+                      "tags": tags,
+                      "categoryId": "23"
+                  },
+                  "status": {
+                      "privacyStatus": "private",
+                      "selfDeclaredMadeForKids": False
+                  }
+              }
+
+              media = MediaFileUpload(
+                  str(video_path),
+                  chunksize=-1,
+                  resumable=True,
+                  mimetype="video/mp4"
+              )
+
+              request = youtube.videos().insert(
+                  part="snippet,status",
+                  body=body,
+                  media_body=media
+              )
+
+              response = None
+              while response is None:
+                  progress, response = request.next_chunk()
+                  if progress:
+                      print(f"Upload progress: {int(progress.progress() * 100)}%")
+
+              print("Upload complete.")
+              print("Video ID:", response.get("id"))
+
+          title, description, tags, script = make_script()
+
+          print("TITLE:", title)
+          print("SCRIPT:")
+          print(script)
+
+          video = make_video(script)
+          upload_video(video, title, description, tags)
+          PY
+
+          python brainrot_agent.py
